@@ -2,6 +2,26 @@
 
 This repository contains a reusable Playwright accessibility package and two mock apps that demonstrate it: an automotive configurator and a stock portfolio.
 
+## Screenshots
+
+### Automotive configurator
+
+![Automotive configurator demo](screenshots/automotive-configurator.png)
+
+### Stock portfolio
+
+![Stock portfolio demo](screenshots/stock-portfolio.png)
+
+### Playwright test reports
+
+Automotive demo: 9 tests passed.
+
+![Automotive Playwright test report](screenshots/automotive-test-report.png)
+
+Stock portfolio demo: 5 tests passed.
+
+![Stock portfolio Playwright test report](screenshots/stock-portfolio-test-report.png)
+
 ```text
 framework/playwright-accessibility/  Shared audit utilities and assertions
 demo-app-automotive/                 Automotive configurator demo and tests
