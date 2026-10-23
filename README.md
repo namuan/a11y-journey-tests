@@ -22,6 +22,10 @@ Stock portfolio demo: 5 tests passed.
 
 ![Stock portfolio Playwright test report](screenshots/stock-portfolio-test-report.png)
 
+Example failure report from a temporary test that injected unnamed button/link, missing image alternative, and missing form label defects:
+
+![Playwright report showing multiple accessibility rule failures](screenshots/accessibility-errors-report.png)
+
 ```text
 framework/playwright-accessibility/  Shared audit utilities and assertions
 demo-app-automotive/                 Automotive configurator demo and tests

@@ -1,4 +1,10 @@
-import { auditAccessibility, collectAccessibilityResults } from '@poc/playwright-accessibility';
+import {
+  auditAccessibility,
+  collectAccessibilityResults,
+  expectFocusRestored,
+  expectFocusWithin,
+  expectValidationAssociation,
+} from '@poc/playwright-accessibility';
 import { expect, test, type Page } from '@playwright/test';
 
 async function completeLeadForm(page: Page) {
@@ -38,7 +44,8 @@ test('axe detects the deliberately broken paint accessible name', async ({ page 
 test('empty lead submission associates errors and focuses the summary', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: 'Send my enquiry' }).click();
   await expect(page.getByRole('alert').getByRole('heading', { name: 'There’s a little more to complete' })).toBeVisible();
-  await expect(page.getByRole('alert')).toBeFocused();
+  await expectFocusWithin(page.getByRole('alert'));
+  await expectValidationAssociation(page.getByLabel('First name'), page.locator('#firstName-error'));
   await expect(page.getByLabel('First name')).toHaveAttribute('aria-invalid', 'true');
   await expect(page.getByLabel('First name')).toHaveAttribute('aria-describedby', 'firstName-error');
   await auditAccessibility(page, testInfo, { label: 'lead-validation-errors' });
@@ -52,11 +59,14 @@ test('dealer autocomplete and privacy dialog work with the keyboard', async ({ p
   await expect(dealer).toHaveAttribute('aria-activedescendant', 'dealer-option-0');
   await dealer.press('Enter');
   await expect(dealer).toHaveValue('Northstar Seattle');
-  await page.getByRole('button', { name: 'Read our contact and privacy information' }).click();
+  const dialogTrigger = page.getByRole('button', { name: 'Read our contact and privacy information' });
+  await dialogTrigger.click();
   const dialog = page.getByRole('dialog', { name: 'Contact and privacy information' });
   await expect(dialog).toBeVisible();
+  await expectFocusWithin(dialog);
   await page.keyboard.press('Escape');
   await expect(dialog).not.toBeVisible();
+  await expectFocusRestored(dialogTrigger);
   await auditAccessibility(page, testInfo, { label: 'dealer-and-dialog' });
 });
 

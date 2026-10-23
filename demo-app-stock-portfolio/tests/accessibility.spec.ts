@@ -1,4 +1,9 @@
-import { auditAccessibility, expectAccessibleName } from '@poc/playwright-accessibility';
+import {
+  auditAccessibility,
+  expectAccessibleName,
+  expectFocusWithin,
+  expectValidationAssociation,
+} from '@poc/playwright-accessibility';
 import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
@@ -19,8 +24,8 @@ test('invalid trade quantity is associated with an error and receives focus', as
   await quantity.fill('0');
   await page.getByRole('button', { name: 'Review buy order' }).click();
   await expect(page.getByRole('alert').getByRole('heading', { name: 'Check your order' })).toBeVisible();
-  await expect(page.getByRole('alert')).toBeFocused();
-  await expect(quantity).toHaveAttribute('aria-invalid', 'true');
+  await expectFocusWithin(page.getByRole('alert'));
+  await expectValidationAssociation(quantity, page.locator('#shares-error'));
   await expect(quantity).toHaveAttribute('aria-describedby', 'shares-error');
   await auditAccessibility(page, testInfo, { label: 'trade-validation-error' });
 });

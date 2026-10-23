@@ -9,7 +9,7 @@ Automated scans help identify programmatically detectable issues; they do not pr
 - Runs axe-core against the current page using WCAG 2.0, 2.1, and 2.2 A/AA tags by default.
 - Attaches full axe results and a compact summary to the current Playwright test.
 - Fails `auditAccessibility` when axe reports violations.
-- Provides thin helpers around Playwright's accessible-name and accessible-description assertions.
+- Provides thin helpers for accessible names, descriptions, focus containment/restoration, and validation-error associations.
 - Normalizes axe violations to an app-independent finding format for custom reporting.
 
 The app test remains responsible for navigation, waiting for a meaningful state, choosing scan points, test data, service mocks, business assertions, and expected names/roles/states. The framework has no app-specific selectors or service behavior. It does not currently implement baselines, waivers, CI workflows, or issue-tracker integrations.
@@ -101,7 +101,7 @@ test('trade form exposes its labels and validation state', async ({ page }) => {
 });
 ```
 
-`expectAccessibleName(locator, name)` and `expectAccessibleDescription(locator, description)` delegate to Playwright's built-in matchers. Assertions for checked, selected, expanded, disabled, invalid, modal, and focus states can use Playwright's normal locator assertions directly.
+`expectAccessibleName(locator, name)` and `expectAccessibleDescription(locator, description)` delegate to Playwright's built-in matchers. `expectFocusWithin(container)` verifies focus is on or within a region; `expectFocusRestored(trigger)` verifies focus returned to a specific trigger. `expectValidationAssociation(control, error)` verifies the control is invalid, the error is visible and has an ID, and the control references that ID through `aria-describedby` or `aria-errormessage`. Assertions for checked, selected, expanded, disabled, and other states can use Playwright's normal locator assertions directly.
 
 ## Collect findings without failing
 
@@ -133,6 +133,61 @@ const findings = normalizeAccessibilityFindings(results, {
 ```
 
 The framework does not create tickets or define product severity, owners, deduplication policy, or exceptions. Consumers decide how to use normalized findings.
+
+## Manual checks: automation opportunities and boundaries
+
+Many manual checks contain repeatable assertions that can be automated. The framework standardizes generic mechanics, while each app test supplies its controls, expected behavior, and meaningful state. The package currently provides axe scans, accessible-name/description assertions, focus containment/restoration, validation-error association, and finding normalization. Other checks below are performed directly in app tests or remain future additions.
+
+| Check area | Reusable framework potential | App-specific test responsibility | Still needs human review |
+|---|---|---|---|
+| Keyboard workflows | `expectFocusWithin` and `expectFocusRestored`; explicit sequence helpers remain a possible addition | Define the actual journey, actionable controls, and expected focus order | Whether the sequence is logical and focus is easy to track |
+| Dialogs and popovers | `expectFocusWithin` and `expectFocusRestored` assert focus location around app-owned open/close actions | Open the specific component and identify the expected trigger and focus destination | Whether dialog instructions and behavior are understandable with assistive technology |
+| Forms and errors | `expectValidationAssociation` verifies invalid state and error-description association | Supply fields, validation actions, expected errors, and recovery behavior | Whether error messages and recovery instructions are clear |
+| Dynamic announcements | A helper could verify live-region semantics and expected text changes | Trigger the update and define expected pricing/status/results | Whether announcements are timely, non-duplicative, and useful with a screen reader |
+| Autocomplete | Optional role/state assertions for comboboxes, listboxes, and options | Define the widget's supported keys, expected options, and selection behavior | Whether the interaction and announcements make sense to users |
+| Responsive reflow | Optional viewport smoke checks or generic overflow detection | Choose supported viewports and assert critical content remains usable | Browser zoom, enlarged text, and real-device usability |
+| Structure and alternatives | Existing axe scans and accessible-name/description helpers; additional reusable assertions could be added | State which headings, landmarks, tables, and image alternatives are expected | Whether the hierarchy and alternatives convey the content correctly |
+
+Automated checks do not verify actual screen-reader output. Keep targeted keyboard, screen-reader, zoom/reflow, and usability reviews in each product's accessibility test plan.
+
+## Roadmap for reusable helpers
+
+Implement these as small, opt-in utilities. Every helper must accept app-owned locators and expected behavior; avoid guessing selectors, navigating the app, triggering business actions, or claiming to prove assistive-technology output.
+
+### Phase 1: Focus and form relationships (implemented)
+
+- `expectFocusWithin(container)` verifies focus is on or within a supplied region.
+- `expectFocusRestored(trigger)` verifies focus returned to the supplied trigger.
+- `expectValidationAssociation(control, error)` verifies an invalid control references its visible error through `aria-describedby` or `aria-errormessage`.
+- Both demo apps use the helpers; the automotive dialog test also verifies focus restoration after Escape.
+- Framework tests cover passing and failing helper cases.
+
+The app test still owns opening/closing dialogs, submitting forms, correcting input, and deciding where focus should go.
+
+### Phase 2: Live-region and composite-widget contracts
+
+- Add `expectLiveRegionUpdate(region, expectedText)` to verify that a caller-provided region has a status/live semantic and receives the expected text after the app test triggers an update.
+- Add `expectComboboxState` assertions for caller-supplied expanded state, controlled list, active option, and selected value where those attributes are used.
+- Do not provide a generic keyboard driver for every combobox pattern. App tests specify the supported keys and expected behavior.
+
+**Acceptance:** Tests demonstrate initial and updated states, expanded/collapsed states, valid active descendants, and clear failures for malformed relationships. Documentation states that DOM assertions cannot confirm spoken announcements.
+
+### Phase 3: Responsive smoke checks
+
+- Add an opt-in `expectNoHorizontalOverflow(page, options)` check for the document at a caller-selected viewport.
+- Permit explicit exclusions for intentionally scrollable regions such as data tables; keep exclusions narrow and visible in test code.
+- Keep viewport selection, critical content assertions, browser zoom testing, and expected responsive behavior app-owned.
+
+**Acceptance:** Framework tests verify both document-level overflow detection and allowed nested scroll regions; demo tests cover a small viewport without relying on screenshot pixel comparisons.
+
+### Phase 4: Stabilize and publish the API
+
+- Apply consistent naming, useful failure messages, TypeScript types, and public exports.
+- Document each helper's guarantees, assumptions, and non-goals.
+- Keep framework tests separate from consumer journey tests and use both demos as integration consumers.
+- Review Playwright/axe version compatibility before publishing a release; keep the `@poc` scope and local-workspace distribution model until an actual package owner and registry are selected.
+
+**Definition of done:** Each utility has focused positive/negative tests, both consumers can adopt it without framework-specific application code, error messages identify the failed relationship/state, and the documentation preserves the human-review boundary.
 
 ## Practical guidance
 

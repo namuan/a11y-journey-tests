@@ -44,6 +44,7 @@ function App() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const summaryRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const dialogTriggerRef = useRef<HTMLButtonElement>(null);
   const dealerInputRef = useRef<HTMLInputElement>(null);
   const priceRef = useRef<HTMLParagraphElement>(null);
 
@@ -136,6 +137,7 @@ function App() {
   function closeDialog() {
     dialogRef.current?.close();
     setDialogOpen(false);
+    requestAnimationFrame(() => dialogTriggerRef.current?.focus());
   }
 
   const fieldError = (key: keyof FormValues) => errors[key] ? `${key}-error` : undefined;
@@ -330,7 +332,7 @@ function App() {
                     <span>I agree that Northstar Motors and my selected dealer may contact me about this enquiry.</span>
                   </label>
                   {errors.consent && <p className="field-error consent-error" id="consent-error">{errors.consent}</p>}
-                  <button className="text-button" type="button" onClick={openDialog}>Read our contact and privacy information</button>
+                  <button className="text-button" type="button" ref={dialogTriggerRef} onClick={openDialog}>Read our contact and privacy information</button>
                 </div>
 
                 <button className="submit-button" type="submit" disabled={submitting}>{submitting ? 'Sending…' : 'Send my enquiry'}<span aria-hidden="true">↗</span></button>
@@ -345,7 +347,7 @@ function App() {
       <footer className="footer"><span>Northstar Motors</span><span>Designed for the road ahead.</span></footer>
 
       {dialogOpen && (
-        <dialog className="privacy-dialog" ref={dialogRef} aria-labelledby="privacy-heading" onClose={() => setDialogOpen(false)} onCancel={() => setDialogOpen(false)}>
+        <dialog className="privacy-dialog" ref={dialogRef} aria-labelledby="privacy-heading" onClose={() => setDialogOpen(false)} onCancel={(event) => { event.preventDefault(); closeDialog(); }}>
           <div className="dialog-content">
             <p className="eyebrow">Your information</p>
             <h2 id="privacy-heading">Contact and privacy information</h2>
