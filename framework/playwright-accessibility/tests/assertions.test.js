@@ -1,7 +1,46 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { chromium } from '@playwright/test';
-import { expectFocusRestored, expectFocusWithin, expectValidationAssociation } from '../dist/assertions.js';
+import {
+  expectComboboxState,
+  expectFocusRestored,
+  expectFocusWithin,
+  expectLiveRegionUpdate,
+  expectValidationAssociation,
+} from '../dist/assertions.js';
+
+test('live-region and combobox helpers verify announcement semantics and relationships', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await page.setContent(`
+      <p id="status" role="status" aria-live="polite">Portfolio refreshed</p>
+      <label for="dealer">Dealer</label>
+      <input id="dealer" role="combobox" aria-expanded="true" aria-controls="dealers" aria-activedescendant="dealer-option" value="Seattle">
+      <ul id="dealers" role="listbox">
+        <li id="dealer-option" role="option" aria-selected="true">Seattle North</li>
+      </ul>
+    `);
+
+    await expectLiveRegionUpdate(page.locator('#status'), 'Portfolio refreshed');
+    await expectComboboxState(page.locator('#dealer'), {
+      expanded: true,
+      listbox: page.locator('#dealers'),
+      activeOption: page.locator('#dealer-option'),
+      selectedOption: page.locator('#dealer-option'),
+      value: 'Seattle',
+    });
+    await assert.rejects(() => expectLiveRegionUpdate(page.locator('#dealer'), 'Seattle'));
+    await page.locator('#dealer').evaluate((element) => element.setAttribute('aria-controls', 'wrong-list'));
+    await assert.rejects(() => expectComboboxState(page.locator('#dealer'), {
+      expanded: true,
+      listbox: page.locator('#dealers'),
+      activeOption: page.locator('#dealer-option'),
+    }));
+  } finally {
+    await browser.close();
+  }
+});
 
 test('focus and validation helpers verify supplied element relationships', async () => {
   const browser = await chromium.launch();

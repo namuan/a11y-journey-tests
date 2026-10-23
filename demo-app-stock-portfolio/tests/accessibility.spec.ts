@@ -1,6 +1,7 @@
 import {
   auditAccessibility,
   expectAccessibleName,
+  expectLiveRegionUpdate,
   expectFocusWithin,
   expectValidationAssociation,
 } from '@poc/playwright-accessibility';
@@ -24,6 +25,7 @@ test('invalid trade quantity is associated with an error and receives focus', as
   await quantity.fill('0');
   await page.getByRole('button', { name: 'Review buy order' }).click();
   await expect(page.getByRole('alert').getByRole('heading', { name: 'Check your order' })).toBeVisible();
+  await expectLiveRegionUpdate(page.getByRole('alert'), 'Check your order', { politeness: 'assertive' });
   await expectFocusWithin(page.getByRole('alert'));
   await expectValidationAssociation(quantity, page.locator('#shares-error'));
   await expect(quantity).toHaveAttribute('aria-describedby', 'shares-error');
@@ -40,7 +42,7 @@ test('successful mock trade updates holdings and account values', async ({ page 
   });
   await page.getByRole('spinbutton', { name: 'Number of shares' }).fill('2');
   await page.getByRole('button', { name: 'Review buy order' }).click();
-  await expect(page.getByRole('status')).toContainText('MOCK-TRADE-001');
+  await expectLiveRegionUpdate(page.getByRole('status'), 'MOCK-TRADE-001');
   await expect(page.getByRole('row', { name: /VTI Total Market ETF 14/ })).toBeVisible();
   await auditAccessibility(page, testInfo, { label: 'trade-success' });
 });
@@ -70,7 +72,7 @@ test('failed mock trade keeps order details and supports retry', async ({ page }
   const quantity = page.getByRole('spinbutton', { name: 'Number of shares' });
   await quantity.fill('2');
   await page.getByRole('button', { name: 'Review buy order' }).click();
-  await expect(page.getByRole('status')).toContainText('could not place your order');
+  await expectLiveRegionUpdate(page.getByRole('status'), 'could not place your order');
   await expect(quantity).toHaveValue('2');
   await auditAccessibility(page, testInfo, { label: 'trade-service-failure' });
   await page.getByRole('button', { name: 'Review buy order' }).click();

@@ -9,7 +9,7 @@ Automated scans help identify programmatically detectable issues; they do not pr
 - Runs axe-core against the current page using WCAG 2.0, 2.1, and 2.2 A/AA tags by default.
 - Attaches full axe results and a compact summary to the current Playwright test.
 - Fails `auditAccessibility` when axe reports violations.
-- Provides thin helpers for accessible names, descriptions, focus containment/restoration, and validation-error associations.
+- Provides helpers for accessible names, descriptions, focus containment/restoration, validation-error associations, live-region updates, and combobox state relationships.
 - Normalizes axe violations to an app-independent finding format for custom reporting.
 
 The app test remains responsible for navigation, waiting for a meaningful state, choosing scan points, test data, service mocks, business assertions, and expected names/roles/states. The framework has no app-specific selectors or service behavior. It does not currently implement baselines, waivers, CI workflows, or issue-tracker integrations.
@@ -101,7 +101,9 @@ test('trade form exposes its labels and validation state', async ({ page }) => {
 });
 ```
 
-`expectAccessibleName(locator, name)` and `expectAccessibleDescription(locator, description)` delegate to Playwright's built-in matchers. `expectFocusWithin(container)` verifies focus is on or within a region; `expectFocusRestored(trigger)` verifies focus returned to a specific trigger. `expectValidationAssociation(control, error)` verifies the control is invalid, the error is visible and has an ID, and the control references that ID through `aria-describedby` or `aria-errormessage`. Assertions for checked, selected, expanded, disabled, and other states can use Playwright's normal locator assertions directly.
+`expectAccessibleName(locator, name)` and `expectAccessibleDescription(locator, description)` delegate to Playwright's built-in matchers. `expectFocusWithin(container)` verifies focus is on or within a region; `expectFocusRestored(trigger)` verifies focus returned to a specific trigger. `expectValidationAssociation(control, error)` verifies the control is invalid, the error is visible and has an ID, and the control references that ID through `aria-describedby` or `aria-errormessage`.
+
+`expectLiveRegionUpdate(region, expectedText, options)` verifies a caller-provided live region has the requested polite/assertive semantics and contains expected text after the app test triggers an update. It does not observe or certify spoken screen-reader output. `expectComboboxState(combobox, options)` can assert `aria-expanded`, the controlled listbox relationship, active descendant, selected option, and current value when those locators/states are supplied. The app test still performs the keyboard actions and defines the expected behavior.
 
 ## Collect findings without failing
 
@@ -143,8 +145,8 @@ Many manual checks contain repeatable assertions that can be automated. The fram
 | Keyboard workflows | `expectFocusWithin` and `expectFocusRestored`; explicit sequence helpers remain a possible addition | Define the actual journey, actionable controls, and expected focus order | Whether the sequence is logical and focus is easy to track |
 | Dialogs and popovers | `expectFocusWithin` and `expectFocusRestored` assert focus location around app-owned open/close actions | Open the specific component and identify the expected trigger and focus destination | Whether dialog instructions and behavior are understandable with assistive technology |
 | Forms and errors | `expectValidationAssociation` verifies invalid state and error-description association | Supply fields, validation actions, expected errors, and recovery behavior | Whether error messages and recovery instructions are clear |
-| Dynamic announcements | A helper could verify live-region semantics and expected text changes | Trigger the update and define expected pricing/status/results | Whether announcements are timely, non-duplicative, and useful with a screen reader |
-| Autocomplete | Optional role/state assertions for comboboxes, listboxes, and options | Define the widget's supported keys, expected options, and selection behavior | Whether the interaction and announcements make sense to users |
+| Dynamic announcements | `expectLiveRegionUpdate` checks live semantics and expected text after an app-triggered update | Trigger the update and define expected pricing/status/results | Whether announcements are timely, non-duplicative, and useful with a screen reader |
+| Autocomplete | `expectComboboxState` checks supplied expanded/listbox/active/selected/value relationships | Define the widget's supported keys, expected options, and selection behavior | Whether the interaction and announcements make sense to users |
 | Responsive reflow | Optional viewport smoke checks or generic overflow detection | Choose supported viewports and assert critical content remains usable | Browser zoom, enlarged text, and real-device usability |
 | Structure and alternatives | Existing axe scans and accessible-name/description helpers; additional reusable assertions could be added | State which headings, landmarks, tables, and image alternatives are expected | Whether the hierarchy and alternatives convey the content correctly |
 
@@ -164,13 +166,14 @@ Implement these as small, opt-in utilities. Every helper must accept app-owned l
 
 The app test still owns opening/closing dialogs, submitting forms, correcting input, and deciding where focus should go.
 
-### Phase 2: Live-region and composite-widget contracts
+### Phase 2: Live-region and composite-widget contracts (implemented)
 
-- Add `expectLiveRegionUpdate(region, expectedText)` to verify that a caller-provided region has a status/live semantic and receives the expected text after the app test triggers an update.
-- Add `expectComboboxState` assertions for caller-supplied expanded state, controlled list, active option, and selected value where those attributes are used.
-- Do not provide a generic keyboard driver for every combobox pattern. App tests specify the supported keys and expected behavior.
+- `expectLiveRegionUpdate(region, expectedText, options)` verifies live-region semantics and expected content after an app-triggered update. `options.politeness` can specify `polite` or `assertive`.
+- `expectComboboxState(combobox, options)` checks supplied expanded state, controlled listbox, active descendant, selected option, and current value.
+- The automotive demo uses these helpers for price updates, form errors, dealer autocomplete, and lead feedback; the stock portfolio demo uses them for trade validation and feedback.
+- App tests still perform keyboard actions and define expected behavior; the framework does not provide a generic combobox keyboard driver.
 
-**Acceptance:** Tests demonstrate initial and updated states, expanded/collapsed states, valid active descendants, and clear failures for malformed relationships. Documentation states that DOM assertions cannot confirm spoken announcements.
+**Acceptance:** Framework tests cover valid and invalid live-region/combobox relationships, both demos exercise the helpers, and documentation states that DOM assertions cannot confirm spoken announcements.
 
 ### Phase 3: Responsive smoke checks
 

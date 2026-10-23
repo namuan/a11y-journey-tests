@@ -5,6 +5,10 @@ export {
   expectFocusRestored,
   expectFocusWithin,
   expectValidationAssociation,
+  expectLiveRegionUpdate,
+  expectComboboxState,
+  type ComboboxStateOptions,
+  type LiveRegionOptions,
 } from './assertions.js';
 export { normalizeAccessibilityFindings, type NormalizedAccessibilityFinding } from './findings.js';
 export { auditAccessibility, collectAccessibilityResults } from './scan.js';

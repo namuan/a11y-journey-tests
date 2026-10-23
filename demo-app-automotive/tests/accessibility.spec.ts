@@ -1,6 +1,8 @@
 import {
   auditAccessibility,
   collectAccessibilityResults,
+  expectComboboxState,
+  expectLiveRegionUpdate,
   expectFocusRestored,
   expectFocusWithin,
   expectValidationAssociation,
@@ -31,6 +33,7 @@ test('initial and changed configurator states are accessible', async ({ page }, 
   await page.getByRole('radio', { name: /Metallic Blue/ }).check();
   await page.getByRole('checkbox', { name: /Cold-weather comfort/ }).check();
   await expect(page.getByText('£46,200')).toBeVisible();
+  await expectLiveRegionUpdate(page.getByText('£46,200'), '£46,200');
   await expect(page.getByText('Sport', { exact: true }).last()).toBeVisible();
   await auditAccessibility(page, testInfo, { label: 'configurator-sport-selected' });
 });
@@ -44,6 +47,7 @@ test('axe detects the deliberately broken paint accessible name', async ({ page 
 test('empty lead submission associates errors and focuses the summary', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: 'Send my enquiry' }).click();
   await expect(page.getByRole('alert').getByRole('heading', { name: 'There’s a little more to complete' })).toBeVisible();
+  await expectLiveRegionUpdate(page.getByRole('alert'), 'There’s a little more to complete', { politeness: 'assertive' });
   await expectFocusWithin(page.getByRole('alert'));
   await expectValidationAssociation(page.getByLabel('First name'), page.locator('#firstName-error'));
   await expect(page.getByLabel('First name')).toHaveAttribute('aria-invalid', 'true');
@@ -53,12 +57,19 @@ test('empty lead submission associates errors and focuses the summary', async ({
 
 test('dealer autocomplete and privacy dialog work with the keyboard', async ({ page }, testInfo) => {
   const dealer = page.getByRole('combobox', { name: 'Preferred dealer' });
+  const dealerOptions = page.getByRole('listbox', { name: 'Dealer suggestions' });
   await dealer.fill('Seattle');
-  await expect(dealer).toHaveAttribute('aria-expanded', 'true');
+  await expectComboboxState(dealer, { expanded: true, listbox: dealerOptions });
   await dealer.press('ArrowDown');
-  await expect(dealer).toHaveAttribute('aria-activedescendant', 'dealer-option-0');
+  const seattleOption = page.getByRole('option', { name: 'Northstar Seattle' });
+  await expectComboboxState(dealer, {
+    expanded: true,
+    listbox: dealerOptions,
+    activeOption: seattleOption,
+    selectedOption: seattleOption,
+  });
   await dealer.press('Enter');
-  await expect(dealer).toHaveValue('Northstar Seattle');
+  await expectComboboxState(dealer, { expanded: false, value: 'Northstar Seattle' });
   const dialogTrigger = page.getByRole('button', { name: 'Read our contact and privacy information' });
   await dialogTrigger.click();
   const dialog = page.getByRole('dialog', { name: 'Contact and privacy information' });
@@ -80,7 +91,7 @@ test('successful lead submission displays an accessible confirmation', async ({ 
   });
   await completeLeadForm(page);
   await page.getByRole('button', { name: 'Send my enquiry' }).click();
-  await expect(page.getByRole('status')).toContainText('TEST-LEAD-001');
+  await expectLiveRegionUpdate(page.getByRole('status'), 'TEST-LEAD-001');
   await auditAccessibility(page, testInfo, { label: 'lead-success' });
 });
 
