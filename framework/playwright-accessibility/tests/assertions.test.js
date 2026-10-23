@@ -6,6 +6,7 @@ import {
   expectFocusRestored,
   expectFocusWithin,
   expectLiveRegionUpdate,
+  expectNoHorizontalOverflow,
   expectValidationAssociation,
 } from '../dist/assertions.js';
 
@@ -37,6 +38,26 @@ test('live-region and combobox helpers verify announcement semantics and relatio
       listbox: page.locator('#dealers'),
       activeOption: page.locator('#dealer-option'),
     }));
+  } finally {
+    await browser.close();
+  }
+});
+
+test('responsive layout helper permits explicit nested scrolling and detects document overflow', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({ viewport: { width: 400, height: 800 } });
+    await page.setContent(`
+      <div id="table-scroll" style="width: 300px; overflow-x: auto"><div style="width: 600px; height: 20px"></div></div>
+    `);
+    await expectNoHorizontalOverflow(page, { allowedScrollableRegions: [page.locator('#table-scroll')] });
+    await page.locator('body').evaluate((body) => {
+      const overflowingContent = document.createElement('div');
+      overflowingContent.style.width = '600px';
+      overflowingContent.style.height = '20px';
+      body.append(overflowingContent);
+    });
+    await assert.rejects(() => expectNoHorizontalOverflow(page, { allowedScrollableRegions: [page.locator('#table-scroll')] }));
   } finally {
     await browser.close();
   }

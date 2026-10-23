@@ -3,6 +3,7 @@ import {
   collectAccessibilityResults,
   expectComboboxState,
   expectLiveRegionUpdate,
+  expectNoHorizontalOverflow,
   expectFocusRestored,
   expectFocusWithin,
   expectValidationAssociation,
@@ -79,6 +80,13 @@ test('dealer autocomplete and privacy dialog work with the keyboard', async ({ p
   await expect(dialog).not.toBeVisible();
   await expectFocusRestored(dialogTrigger);
   await auditAccessibility(page, testInfo, { label: 'dealer-and-dialog' });
+});
+
+test('layout reflows at a narrow viewport without page-level horizontal scrolling', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await expectNoHorizontalOverflow(page);
+  await expect(page.getByRole('heading', { level: 1, name: 'Made for your kind of journey.' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Send my enquiry' })).toBeVisible();
 });
 
 test('successful lead submission displays an accessible confirmation', async ({ page }, testInfo) => {

@@ -2,6 +2,7 @@ import {
   auditAccessibility,
   expectAccessibleName,
   expectLiveRegionUpdate,
+  expectNoHorizontalOverflow,
   expectFocusWithin,
   expectValidationAssociation,
 } from '@poc/playwright-accessibility';
@@ -9,6 +10,13 @@ import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
+});
+
+test('mobile layout avoids page overflow and keeps the holdings table scrollable', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await expectNoHorizontalOverflow(page, { allowedScrollableRegions: [page.locator('.table-scroll')] });
+  await expect(page.getByRole('heading', { level: 1, name: 'Your portfolio' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Review buy order' })).toBeVisible();
 });
 
 test('portfolio overview and holdings table are accessible', async ({ page }, testInfo) => {

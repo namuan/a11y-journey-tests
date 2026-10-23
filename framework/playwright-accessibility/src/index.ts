@@ -7,7 +7,9 @@ export {
   expectValidationAssociation,
   expectLiveRegionUpdate,
   expectComboboxState,
+  expectNoHorizontalOverflow,
   type ComboboxStateOptions,
+  type HorizontalOverflowOptions,
   type LiveRegionOptions,
 } from './assertions.js';
 export { normalizeAccessibilityFindings, type NormalizedAccessibilityFinding } from './findings.js';

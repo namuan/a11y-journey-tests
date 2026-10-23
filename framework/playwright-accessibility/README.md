@@ -9,7 +9,7 @@ Automated scans help identify programmatically detectable issues; they do not pr
 - Runs axe-core against the current page using WCAG 2.0, 2.1, and 2.2 A/AA tags by default.
 - Attaches full axe results and a compact summary to the current Playwright test.
 - Fails `auditAccessibility` when axe reports violations.
-- Provides helpers for accessible names, descriptions, focus containment/restoration, validation-error associations, live-region updates, and combobox state relationships.
+- Provides helpers for accessible names, descriptions, focus containment/restoration, validation-error associations, live-region updates, combobox state relationships, and responsive horizontal-overflow checks.
 - Normalizes axe violations to an app-independent finding format for custom reporting.
 
 The app test remains responsible for navigation, waiting for a meaningful state, choosing scan points, test data, service mocks, business assertions, and expected names/roles/states. The framework has no app-specific selectors or service behavior. It does not currently implement baselines, waivers, CI workflows, or issue-tracker integrations.
@@ -105,6 +105,8 @@ test('trade form exposes its labels and validation state', async ({ page }) => {
 
 `expectLiveRegionUpdate(region, expectedText, options)` verifies a caller-provided live region has the requested polite/assertive semantics and contains expected text after the app test triggers an update. It does not observe or certify spoken screen-reader output. `expectComboboxState(combobox, options)` can assert `aria-expanded`, the controlled listbox relationship, active descendant, selected option, and current value when those locators/states are supplied. The app test still performs the keyboard actions and defines the expected behavior.
 
+`expectNoHorizontalOverflow(page, options)` verifies the document width does not exceed the viewport beyond an optional pixel tolerance. Pass known horizontally scrollable regions through `allowedScrollableRegions`; each must explicitly use `overflow-x: auto` or `scroll` and contain wider content. This recognizes intentional nested scrolling but does not exempt document-level overflow. The consumer chooses the viewport and asserts that essential content remains usable.
+
 ## Collect findings without failing
 
 Most tests should use `auditAccessibility`, which fails on findings. `collectAccessibilityResults` is available when a test needs to inspect results without an immediate assertion, such as a deliberate-defect demonstration:
@@ -138,7 +140,7 @@ The framework does not create tickets or define product severity, owners, dedupl
 
 ## Manual checks: automation opportunities and boundaries
 
-Many manual checks contain repeatable assertions that can be automated. The framework standardizes generic mechanics, while each app test supplies its controls, expected behavior, and meaningful state. The package currently provides axe scans, accessible-name/description assertions, focus containment/restoration, validation-error association, and finding normalization. Other checks below are performed directly in app tests or remain future additions.
+Many manual checks contain repeatable assertions that can be automated. The framework standardizes generic mechanics, while each app test supplies its controls, expected behavior, viewport, and meaningful state. The package currently provides axe scans, accessible-name/description assertions, focus containment/restoration, validation-error association, live-region/combobox assertions, responsive horizontal-overflow checks, and finding normalization. Other checks below are performed directly in app tests or remain future additions.
 
 | Check area | Reusable framework potential | App-specific test responsibility | Still needs human review |
 |---|---|---|---|
@@ -147,7 +149,7 @@ Many manual checks contain repeatable assertions that can be automated. The fram
 | Forms and errors | `expectValidationAssociation` verifies invalid state and error-description association | Supply fields, validation actions, expected errors, and recovery behavior | Whether error messages and recovery instructions are clear |
 | Dynamic announcements | `expectLiveRegionUpdate` checks live semantics and expected text after an app-triggered update | Trigger the update and define expected pricing/status/results | Whether announcements are timely, non-duplicative, and useful with a screen reader |
 | Autocomplete | `expectComboboxState` checks supplied expanded/listbox/active/selected/value relationships | Define the widget's supported keys, expected options, and selection behavior | Whether the interaction and announcements make sense to users |
-| Responsive reflow | Optional viewport smoke checks or generic overflow detection | Choose supported viewports and assert critical content remains usable | Browser zoom, enlarged text, and real-device usability |
+| Responsive reflow | `expectNoHorizontalOverflow` checks document overflow and validates explicitly allowed scroll regions | Choose supported viewports and assert critical content remains usable | Browser zoom, enlarged text, and real-device usability |
 | Structure and alternatives | Existing axe scans and accessible-name/description helpers; additional reusable assertions could be added | State which headings, landmarks, tables, and image alternatives are expected | Whether the hierarchy and alternatives convey the content correctly |
 
 Automated checks do not verify actual screen-reader output. Keep targeted keyboard, screen-reader, zoom/reflow, and usability reviews in each product's accessibility test plan.
@@ -175,13 +177,13 @@ The app test still owns opening/closing dialogs, submitting forms, correcting in
 
 **Acceptance:** Framework tests cover valid and invalid live-region/combobox relationships, both demos exercise the helpers, and documentation states that DOM assertions cannot confirm spoken announcements.
 
-### Phase 3: Responsive smoke checks
+### Phase 3: Responsive smoke checks (implemented)
 
-- Add an opt-in `expectNoHorizontalOverflow(page, options)` check for the document at a caller-selected viewport.
-- Permit explicit exclusions for intentionally scrollable regions such as data tables; keep exclusions narrow and visible in test code.
-- Keep viewport selection, critical content assertions, browser zoom testing, and expected responsive behavior app-owned.
-
-**Acceptance:** Framework tests verify both document-level overflow detection and allowed nested scroll regions; demo tests cover a small viewport without relying on screenshot pixel comparisons.
+- `expectNoHorizontalOverflow(page, options)` checks document overflow at the viewport selected by the app test.
+- `allowedScrollableRegions` explicitly identifies nested scroll containers and verifies each permits horizontal scrolling and contains wider content; it does not suppress document-level overflow.
+- Both demos test at a 375px viewport. The portfolio demo explicitly permits its horizontally scrollable holdings table.
+- Framework tests cover a valid nested scroller and detect actual document-level overflow.
+- Viewport selection, essential-content assertions, browser zoom testing, and expected responsive behavior remain app-owned.
 
 ### Phase 4: Stabilize and publish the API
 

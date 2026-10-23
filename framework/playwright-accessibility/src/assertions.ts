@@ -1,4 +1,4 @@
-import { expect, type Locator } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 export async function expectAccessibleName(locator: Locator, name: string | RegExp) {
   await expect(locator).toHaveAccessibleName(name);
@@ -95,5 +95,33 @@ export async function expectComboboxState(combobox: Locator, options: ComboboxSt
   if (options.selectedOption) {
     await expect(options.selectedOption).toHaveAttribute('role', 'option');
     await expect(options.selectedOption).toHaveAttribute('aria-selected', 'true');
+  }
+}
+
+export type HorizontalOverflowOptions = {
+  tolerance?: number;
+  allowedScrollableRegions?: readonly Locator[];
+};
+
+export async function expectNoHorizontalOverflow(page: Page, options: HorizontalOverflowOptions = {}) {
+  const tolerance = options.tolerance ?? 1;
+  const { viewportWidth, documentWidth } = await page.evaluate(() => ({
+    viewportWidth: window.innerWidth,
+    documentWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
+  }));
+
+  expect(
+    documentWidth,
+    `Expected document width (${documentWidth}px) not to exceed viewport width (${viewportWidth}px) by more than ${tolerance}px`,
+  ).toBeLessThanOrEqual(viewportWidth + tolerance);
+
+  for (const region of options.allowedScrollableRegions ?? []) {
+    const dimensions = await region.evaluate((element) => ({
+      overflowX: window.getComputedStyle(element).overflowX,
+      clientWidth: element.clientWidth,
+      scrollWidth: element.scrollWidth,
+    }));
+    expect(['auto', 'scroll'], 'Allowed regions must explicitly support horizontal scrolling').toContain(dimensions.overflowX);
+    expect(dimensions.scrollWidth, 'Allowed scroll regions should contain horizontally scrollable content').toBeGreaterThan(dimensions.clientWidth);
   }
 }
