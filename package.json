@@ -1,0 +1,19 @@
+{
+  "name": "automotive-accessibility-poc-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "framework/playwright-accessibility",
+    "demo-app-automotive",
+    "demo-app-stock-portfolio"
+  ],
+  "scripts": {
+    "dev": "npm run dev:automotive",
+    "dev:automotive": "npm run dev --workspace=automotive-accessibility-demo",
+    "dev:stock-portfolio": "npm run dev --workspace=stock-portfolio-accessibility-demo",
+    "build": "npm run build --workspace=@poc/playwright-accessibility && npm run build --workspace=automotive-accessibility-demo && npm run build --workspace=stock-portfolio-accessibility-demo",
+    "test": "npm run test --workspace=@poc/playwright-accessibility && npm test --workspace=automotive-accessibility-demo && npm test --workspace=stock-portfolio-accessibility-demo",
+    "test:ui": "npm run build --workspace=@poc/playwright-accessibility && npm run test:ui --workspace=automotive-accessibility-demo && npm run test:ui --workspace=stock-portfolio-accessibility-demo"
+  }
+}

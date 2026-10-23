@@ -1,0 +1,27 @@
+{
+  "name": "@poc/playwright-accessibility",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test tests/*.test.js"
+  },
+  "peerDependencies": {
+    "@axe-core/playwright": ">=4.10.0",
+    "@playwright/test": ">=1.50.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "latest",
+    "@playwright/test": "latest",
+    "typescript": "latest"
+  }
+}
