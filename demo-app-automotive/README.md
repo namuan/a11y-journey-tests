@@ -1,25 +1,33 @@
-# Automotive Accessibility POC
+# Automotive Configurator Demo
 
-A self-contained, mock-data automotive configurator and lead journey for accessibility testing. No production services are called and the demo does not persist form submissions.
+A self-contained mock automotive configurator and lead-submission journey for testing the shared accessibility framework. Dealer search, pricing, and lead services use synthetic data; no production service is called and submissions are not persisted.
 
-## Run locally
+Run commands from the repository root.
 
-```bash
-npm install
-npx playwright install chromium
-npm run dev
-```
-
-Open the local Vite URL printed in the terminal. The demo uses synthetic dealer names and example contact information only.
-
-## Run the accessibility tests
+## Start the app
 
 ```bash
-npx playwright test
+npm run dev:automotive
 ```
 
-Playwright starts the app automatically. The suite exercises configuration, form validation, dealer autocomplete, the privacy dialog, successful submission, and service failure/retry. ANDI-inspired checks also assert accessible names on interactive elements, page landmarks and heading structure, control roles/states, and text alternatives for non-text visuals. Lead submission is intercepted and mocked in the tests. Reports are written to `playwright-report/` and `test-results/`.
+## Build and test
 
-Automated axe scans are not a conformance assessment. Screen reader announcement quality, broader keyboard usability, and cross-browser/assistive-technology behavior still require manual review.
+Build all workspaces and run every test suite:
 
-To demonstrate detection of a deliberate accessible-name defect, open `/?a11y-defect=paint-label`. This mode is disabled by default and is covered by a test that expects axe to report the defect.
+```bash
+npm run build
+npm test
+```
+
+To run only the automotive suite from a fresh checkout, build the framework first:
+
+```bash
+npm run build --workspace=@poc/playwright-accessibility
+npm test --workspace=automotive-accessibility-demo
+```
+
+The automotive tests cover configuration states, pricing announcements, conditional options, form validation, dealer autocomplete, consent dialog focus behavior, and mocked lead success/failure. They also test a narrow viewport. Reports are written to `demo-app-automotive/playwright-report/` and `demo-app-automotive/test-results/`.
+
+A deliberate missing-paint-label example is available at `/?a11y-defect=paint-label`; it is disabled by default and tested as an expected axe finding.
+
+Automated scans do not establish WCAG conformance. Screen-reader output, broader keyboard usability, browser/assistive-technology combinations, and zoom behavior still need manual review.

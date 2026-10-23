@@ -8,7 +8,7 @@ import {
   expectLiveRegionUpdate,
   expectNoHorizontalOverflow,
   expectValidationAssociation,
-} from '../dist/assertions.js';
+} from '../dist/index.js';
 
 test('live-region and combobox helpers verify announcement semantics and relationships', async () => {
   const browser = await chromium.launch();
@@ -38,6 +38,16 @@ test('live-region and combobox helpers verify announcement semantics and relatio
       listbox: page.locator('#dealers'),
       activeOption: page.locator('#dealer-option'),
     }));
+    await page.locator('#dealer').evaluate((element) => {
+      element.setAttribute('aria-controls', 'dealers');
+      element.setAttribute('aria-expanded', 'false');
+    });
+    await page.locator('#dealers').evaluate((element) => { element.hidden = true; });
+    await expectComboboxState(page.locator('#dealer'), {
+      expanded: false,
+      listbox: page.locator('#dealers'),
+      value: 'Seattle',
+    });
   } finally {
     await browser.close();
   }

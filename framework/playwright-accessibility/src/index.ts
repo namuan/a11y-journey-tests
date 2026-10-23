@@ -12,5 +12,10 @@ export {
   type HorizontalOverflowOptions,
   type LiveRegionOptions,
 } from './assertions.js';
-export { normalizeAccessibilityFindings, type NormalizedAccessibilityFinding } from './findings.js';
+export {
+  normalizeAccessibilityFindings,
+  type AccessibilityFindingMetadata,
+  type AccessibilityTarget,
+  type NormalizedAccessibilityFinding,
+} from './findings.js';
 export { auditAccessibility, collectAccessibilityResults } from './scan.js';

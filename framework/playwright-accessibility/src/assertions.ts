@@ -82,6 +82,7 @@ export async function expectComboboxState(combobox: Locator, options: ComboboxSt
     const controlledIds = await combobox.getAttribute('aria-controls') ?? '';
     expect(controlledIds.split(/\s+/), 'Expected aria-controls to reference the listbox').toContain(listboxId);
     if (options.expanded) await expect(options.listbox).toBeVisible();
+    else await expect(options.listbox).toBeHidden();
   }
 
   if (options.activeOption) {

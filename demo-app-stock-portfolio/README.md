@@ -1,18 +1,29 @@
 # Stock Portfolio Demo
 
-A separate mock stock portfolio app that consumes the shared Playwright accessibility workspace package. Portfolio balances, holdings, and trade responses are synthetic; no brokerage or external data service is connected.
+A mock stock portfolio app that demonstrates the shared Playwright accessibility framework outside the automotive journey. Holdings, prices, balances, and trade responses are synthetic; no brokerage or external financial service is connected.
 
-Run it from the repository root:
+Run commands from the repository root.
+
+## Start the app
 
 ```bash
-npm run dev:portfolio
+npm run dev:stock-portfolio
 ```
 
-Run its build and tests from the repository root:
+## Build and test
+
+Build all workspaces and run every test suite:
 
 ```bash
 npm run build
 npm test
 ```
 
-The tests cover accessible holdings structure, form validation, buy/sell constraints, successful mock trades, and service failure/retry. Axe scans use the shared framework package at caller-selected states.
+To run only the portfolio suite from a fresh checkout, build the framework first:
+
+```bash
+npm run build --workspace=@poc/playwright-accessibility
+npm test --workspace=stock-portfolio-accessibility-demo
+```
+
+The tests cover holdings table semantics, trade validation, buy/sell constraints, live feedback, responsive layout with a scrollable table, and mocked trade success/failure. Reports are written to `demo-app-stock-portfolio/playwright-report/` and `demo-app-stock-portfolio/test-results/`.

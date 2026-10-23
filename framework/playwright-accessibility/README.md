@@ -39,7 +39,7 @@ npm run test --workspace=stock-portfolio-accessibility-demo
 
 ## Use from a separate project
 
-The package is not published to npm yet. For local development, clone this repository beside the consumer project, build the package, then add it as a local package dependency:
+For local integration, clone this repository beside the consumer project, build the package, then add it as a local package dependency:
 
 ```bash
 cd a11y-journey-tests
@@ -50,7 +50,7 @@ npm install -D @axe-core/playwright @playwright/test
 npm install ../a11y-journey-tests/framework/playwright-accessibility
 ```
 
-The consumer also needs Playwright installed and configured for its app. The helper package declares `@axe-core/playwright` and `@playwright/test` as peer dependencies; keep compatible versions in the consuming project. A future registry release can replace the local package path.
+The consumer also needs Playwright installed and configured for its app. The helper package declares `@axe-core/playwright` and `@playwright/test` as peer dependencies; keep compatible versions in the consuming project.
 
 ## Run an audit at a meaningful state
 
@@ -125,7 +125,7 @@ Use this only when the test explicitly asserts the expected finding; otherwise a
 
 ## Normalize findings for app-owned reporting
 
-`normalizeAccessibilityFindings(results, metadata)` returns one record per affected axe node, with the rule ID, impact, summary, selector target, failure summary, page URL, and optional state label:
+`normalizeAccessibilityFindings(results, metadata)` returns one record per affected axe node, with the rule ID, impact, summary, axe selector target (including structured frame/shadow-DOM segments), failure summary, page URL, and optional state label:
 
 ```ts
 import { normalizeAccessibilityFindings } from '@poc/playwright-accessibility';
@@ -153,46 +153,6 @@ Many manual checks contain repeatable assertions that can be automated. The fram
 | Structure and alternatives | Existing axe scans and accessible-name/description helpers; additional reusable assertions could be added | State which headings, landmarks, tables, and image alternatives are expected | Whether the hierarchy and alternatives convey the content correctly |
 
 Automated checks do not verify actual screen-reader output. Keep targeted keyboard, screen-reader, zoom/reflow, and usability reviews in each product's accessibility test plan.
-
-## Roadmap for reusable helpers
-
-Implement these as small, opt-in utilities. Every helper must accept app-owned locators and expected behavior; avoid guessing selectors, navigating the app, triggering business actions, or claiming to prove assistive-technology output.
-
-### Phase 1: Focus and form relationships (implemented)
-
-- `expectFocusWithin(container)` verifies focus is on or within a supplied region.
-- `expectFocusRestored(trigger)` verifies focus returned to the supplied trigger.
-- `expectValidationAssociation(control, error)` verifies an invalid control references its visible error through `aria-describedby` or `aria-errormessage`.
-- Both demo apps use the helpers; the automotive dialog test also verifies focus restoration after Escape.
-- Framework tests cover passing and failing helper cases.
-
-The app test still owns opening/closing dialogs, submitting forms, correcting input, and deciding where focus should go.
-
-### Phase 2: Live-region and composite-widget contracts (implemented)
-
-- `expectLiveRegionUpdate(region, expectedText, options)` verifies live-region semantics and expected content after an app-triggered update. `options.politeness` can specify `polite` or `assertive`.
-- `expectComboboxState(combobox, options)` checks supplied expanded state, controlled listbox, active descendant, selected option, and current value.
-- The automotive demo uses these helpers for price updates, form errors, dealer autocomplete, and lead feedback; the stock portfolio demo uses them for trade validation and feedback.
-- App tests still perform keyboard actions and define expected behavior; the framework does not provide a generic combobox keyboard driver.
-
-**Acceptance:** Framework tests cover valid and invalid live-region/combobox relationships, both demos exercise the helpers, and documentation states that DOM assertions cannot confirm spoken announcements.
-
-### Phase 3: Responsive smoke checks (implemented)
-
-- `expectNoHorizontalOverflow(page, options)` checks document overflow at the viewport selected by the app test.
-- `allowedScrollableRegions` explicitly identifies nested scroll containers and verifies each permits horizontal scrolling and contains wider content; it does not suppress document-level overflow.
-- Both demos test at a 375px viewport. The portfolio demo explicitly permits its horizontally scrollable holdings table.
-- Framework tests cover a valid nested scroller and detect actual document-level overflow.
-- Viewport selection, essential-content assertions, browser zoom testing, and expected responsive behavior remain app-owned.
-
-### Phase 4: Stabilize and publish the API
-
-- Apply consistent naming, useful failure messages, TypeScript types, and public exports.
-- Document each helper's guarantees, assumptions, and non-goals.
-- Keep framework tests separate from consumer journey tests and use both demos as integration consumers.
-- Review Playwright/axe version compatibility before publishing a release; keep the `@poc` scope and local-workspace distribution model until an actual package owner and registry are selected.
-
-**Definition of done:** Each utility has focused positive/negative tests, both consumers can adopt it without framework-specific application code, error messages identify the failed relationship/state, and the documentation preserves the human-review boundary.
 
 ## Practical guidance
 

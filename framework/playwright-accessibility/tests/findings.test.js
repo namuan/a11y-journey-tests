@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { normalizeAccessibilityFindings } from '../dist/findings.js';
+import { normalizeAccessibilityFindings } from '../dist/index.js';
 
 test('normalizes axe violations into app-independent findings', () => {
   const findings = normalizeAccessibilityFindings({

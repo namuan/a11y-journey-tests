@@ -32,10 +32,10 @@ The following report is an intentional failure demonstration. A temporary test i
 framework/playwright-accessibility/  Shared accessibility helpers
 demo-app-automotive/                 Automotive configurator and tests
 demo-app-stock-portfolio/            Stock portfolio and tests
-screenshots/                          Demo and test-report images
+screenshots/                         Demo and test-report images
 ```
 
-Each demo owns its application behavior, synthetic data, service mocks, locators, and test states. The shared framework is consumed through the repository's npm workspace. It is not published to npm yet.
+Each demo owns its application behavior, synthetic data, service mocks, locators, and test states. The shared framework is consumed through the repository's npm workspace.
 
 ## Setup
 
@@ -71,13 +71,20 @@ npm run build
 npm test
 ```
 
-Run a single test suite:
+Run the framework test suite directly:
 
 ```bash
-npm run test --workspace=@poc/playwright-accessibility
-npm run test --workspace=automotive-accessibility-demo
-npm run test --workspace=stock-portfolio-accessibility-demo
+npm test --workspace=@poc/playwright-accessibility
 ```
+
+To run one app suite from a fresh checkout, build the shared package first:
+
+```bash
+npm run build --workspace=@poc/playwright-accessibility
+npm test --workspace=automotive-accessibility-demo
+```
+
+Use `stock-portfolio-accessibility-demo` instead of `automotive-accessibility-demo` to run the portfolio tests.
 
 ## Use the framework
 
