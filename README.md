@@ -54,6 +54,10 @@ npm run build
 npm test
 ```
 
+## Framework documentation
+
+See [`framework/playwright-accessibility/README.md`](framework/playwright-accessibility/README.md) for setup, usage examples, scan options, reporting, and integration guidance.
+
 Each demo app owns its journey, synthetic data, service mocks, page behavior, and state selection. The shared package owns reusable axe scans, attachments, finding normalization, and thin Playwright accessible-name assertions. Automated scans do not replace manual keyboard and assistive-technology testing.
 
 ## License
