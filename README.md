@@ -12,31 +12,31 @@ Each full-page screenshot shows one step of the journey.
 
 #### Step 1: Choose a vehicle
 
-![Automotive configurator vehicle step](screenshots/automotive-configurator.png)
+![Automotive configurator vehicle step](screenshots/automotive-configurator.webp)
 
 #### Step 2: Configure options
 
-![Automotive configurator options step](screenshots/automotive-options-step.png)
+![Automotive configurator options step](screenshots/automotive-options-step.webp)
 
 #### Step 3: Send an enquiry
 
-![Automotive configurator enquiry step](screenshots/automotive-enquiry-step.png)
+![Automotive configurator enquiry step](screenshots/automotive-enquiry-step.webp)
 
 ### Stock portfolio
 
-![Stock portfolio demo](screenshots/stock-portfolio.png)
+![Stock portfolio demo](screenshots/stock-portfolio.webp)
 
 ### Playwright test reports
 
 The current screenshots show 10 passing automotive tests and 6 passing portfolio tests.
 
-![Automotive Playwright test report](screenshots/automotive-test-report.png)
+![Automotive Playwright test report](screenshots/automotive-test-report.webp)
 
-![Stock portfolio Playwright test report](screenshots/stock-portfolio-test-report.png)
+![Stock portfolio Playwright test report](screenshots/stock-portfolio-test-report.webp)
 
 The following report is an intentional failure demonstration. A temporary test injected an unnamed button and link, an image without alternative text, and a form control without a label. These defects are not part of the normal passing test suites.
 
-![Playwright report showing multiple accessibility rule failures](screenshots/accessibility-errors-report.png)
+![Playwright report showing multiple accessibility rule failures](screenshots/accessibility-errors-report.webp)
 
 ## Repository layout
 
