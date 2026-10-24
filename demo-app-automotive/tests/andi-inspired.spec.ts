@@ -19,6 +19,10 @@ test('important page structure and control semantics are exposed', async ({ page
   await expect(page.getByRole('contentinfo')).toHaveCount(1);
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   await expect(page.getByRole('radio', { name: 'Northstar E1 All-electric SUV From £42,500' })).toBeChecked();
+  await expect(page.getByRole('navigation', { name: 'Configuration progress' }).getByText('Vehicle')).toHaveAttribute('aria-current', 'step');
+  await page.getByRole('button', { name: 'Continue to vehicle options' }).click();
+  await expect(page.getByRole('radio', { name: /Touring/ })).toBeChecked();
+  await page.getByRole('button', { name: 'Continue to enquiry' }).click();
   await expect(page.getByRole('combobox', { name: 'Preferred dealer' })).toHaveAttribute('aria-autocomplete', 'list');
   await expect(page.getByRole('button', { name: 'Send my enquiry' })).toBeEnabled();
 });

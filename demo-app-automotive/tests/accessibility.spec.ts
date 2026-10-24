@@ -10,7 +10,13 @@ import {
 } from '@poc/playwright-accessibility';
 import { expect, test, type Page } from '@playwright/test';
 
+async function goToLeadStep(page: Page) {
+  await page.getByRole('button', { name: 'Continue to vehicle options' }).click();
+  await page.getByRole('button', { name: 'Continue to enquiry' }).click();
+}
+
 async function completeLeadForm(page: Page) {
+  await goToLeadStep(page);
   await page.getByLabel('First name').fill('Alex');
   await page.getByLabel('Last name').fill('Example');
   await page.getByLabel('Email address').fill('alex@example.test');
@@ -26,8 +32,11 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-test('initial and changed configurator states are accessible', async ({ page }, testInfo) => {
-  await auditAccessibility(page, testInfo, { label: 'configurator-initial' });
+test('step-by-step configuration preserves choices and exposes accessible progress', async ({ page }, testInfo) => {
+  await auditAccessibility(page, testInfo, { label: 'configurator-vehicle-step' });
+  await expect(page.getByRole('navigation', { name: 'Configuration progress' }).getByText('Vehicle')).toHaveAttribute('aria-current', 'step');
+  await page.getByRole('button', { name: 'Continue to vehicle options' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Make it yours' })).toBeFocused();
   await page.getByRole('radio', { name: /Sport/ }).check();
   await expect(page.getByRole('checkbox', { name: /Touring tow package/ })).toBeDisabled();
   await expect(page.getByText('This package is unavailable with Sport trim.')).toBeVisible();
@@ -36,16 +45,24 @@ test('initial and changed configurator states are accessible', async ({ page }, 
   await expect(page.getByText('£46,200')).toBeVisible();
   await expectLiveRegionUpdate(page.getByText('£46,200'), '£46,200');
   await expect(page.getByText('Sport', { exact: true }).last()).toBeVisible();
-  await auditAccessibility(page, testInfo, { label: 'configurator-sport-selected' });
+  await auditAccessibility(page, testInfo, { label: 'configurator-options-step' });
+  await page.getByRole('button', { name: 'Continue to enquiry' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Talk to a specialist' })).toBeFocused();
+  await expect(page.getByText('Metallic Blue').last()).toBeVisible();
+  await page.getByRole('button', { name: 'Back to vehicle options' }).click();
+  await expect(page.getByRole('radio', { name: /Sport/ })).toBeChecked();
+  await expect(page.getByRole('button', { name: 'Continue to enquiry' })).toBeVisible();
 });
 
 test('axe detects the deliberately broken paint accessible name', async ({ page }, testInfo) => {
   await page.goto('/?a11y-defect=paint-label');
+  await page.getByRole('button', { name: 'Continue to vehicle options' }).click();
   const results = await collectAccessibilityResults(page, testInfo, { label: 'deliberate-paint-name-defect' });
   expect(results.violations.map((violation) => violation.id)).toContain('label');
 });
 
 test('empty lead submission associates errors and focuses the summary', async ({ page }, testInfo) => {
+  await goToLeadStep(page);
   await page.getByRole('button', { name: 'Send my enquiry' }).click();
   await expect(page.getByRole('alert').getByRole('heading', { name: 'There’s a little more to complete' })).toBeVisible();
   await expectLiveRegionUpdate(page.getByRole('alert'), 'There’s a little more to complete', { politeness: 'assertive' });
@@ -57,6 +74,7 @@ test('empty lead submission associates errors and focuses the summary', async ({
 });
 
 test('dealer autocomplete and privacy dialog work with the keyboard', async ({ page }, testInfo) => {
+  await goToLeadStep(page);
   const dealer = page.getByRole('combobox', { name: 'Preferred dealer' });
   const dealerOptions = page.getByRole('listbox', { name: 'Dealer suggestions' });
   await dealer.fill('Seattle');
@@ -85,8 +103,8 @@ test('dealer autocomplete and privacy dialog work with the keyboard', async ({ p
 test('layout reflows at a narrow viewport without page-level horizontal scrolling', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await expectNoHorizontalOverflow(page);
-  await expect(page.getByRole('heading', { level: 1, name: 'Made for your kind of journey.' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Send my enquiry' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Choose your vehicle' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Continue to vehicle options' })).toBeVisible();
 });
 
 test('successful lead submission displays an accessible confirmation', async ({ page }, testInfo) => {

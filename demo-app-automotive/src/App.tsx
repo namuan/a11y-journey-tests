@@ -10,6 +10,7 @@ type FormValues = {
 };
 
 type FormErrors = Partial<Record<keyof FormValues, string>>;
+type JourneyStep = 1 | 2 | 3;
 
 const dealers = ['Northstar Seattle', 'Northstar Bellevue', 'Northstar Tacoma'];
 const colors = [
@@ -42,7 +43,9 @@ function App() {
   const [status, setStatus] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [step, setStep] = useState<JourneyStep>(1);
   const summaryRef = useRef<HTMLDivElement>(null);
+  const stepHeadingRef = useRef<HTMLHeadingElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const dialogTriggerRef = useRef<HTMLButtonElement>(null);
   const dealerInputRef = useRef<HTMLInputElement>(null);
@@ -141,6 +144,17 @@ function App() {
   }
 
   const fieldError = (key: keyof FormValues) => errors[key] ? `${key}-error` : undefined;
+  const stepTitles = ['Choose your vehicle', 'Make it yours', 'Talk to a specialist'];
+  const stepDescriptions = [
+    'Choose the Northstar model that fits your journey.',
+    'Choose a trim, colour, and optional packages.',
+    'Review your configuration and send an enquiry to your preferred dealer.',
+  ];
+
+  function goToStep(nextStep: JourneyStep) {
+    setStep(nextStep);
+    requestAnimationFrame(() => stepHeadingRef.current?.focus());
+  }
 
   return (
     <div className="site-shell">
@@ -154,14 +168,23 @@ function App() {
 
       <main id="top" className="page-layout">
         <div className="intro">
-          <p className="eyebrow">Build your vehicle</p>
-          <h1>Made for your kind of journey.</h1>
-          <p className="intro-copy">Choose your Northstar, make it yours, and we’ll help you take the next step.</p>
+          <p className="eyebrow">Step {step} of 3 · Build your vehicle</p>
+          <h1 ref={stepHeadingRef} tabIndex={-1}>{stepTitles[step - 1]}</h1>
+          <p className="intro-copy">{stepDescriptions[step - 1]}</p>
         </div>
 
-        <div className="config-grid">
+        <nav className="journey-progress" aria-label="Configuration progress">
+          <ol>
+            {['Vehicle', 'Options', 'Enquiry'].map((label, index) => {
+              const itemStep = (index + 1) as JourneyStep;
+              return <li key={label}><span aria-current={step === itemStep ? 'step' : undefined} className={step > itemStep ? 'completed' : undefined}><span className="progress-number">{step > itemStep ? '✓' : itemStep}</span>{label}</span></li>;
+            })}
+          </ol>
+        </nav>
+
+        <div className={`config-grid ${step < 3 ? 'single-column' : ''}`}>
           <div className="configuration">
-            <section className="panel" aria-labelledby="vehicle-heading">
+            {step === 1 && <section className="panel" aria-labelledby="vehicle-heading">
               <div className="section-heading">
                 <span className="step-number" aria-hidden="true">01</span>
                 <div><p className="eyebrow">Start with a model</p><h2 id="vehicle-heading">Choose your vehicle</h2></div>
@@ -177,9 +200,11 @@ function App() {
                   </label>
                 ))}
               </fieldset>
-            </section>
+            </section>}
 
-            <section className="panel" aria-labelledby="customize-heading">
+            {step === 1 && <div className="step-actions"><span /><button className="submit-button" type="button" onClick={() => goToStep(2)}>Continue to vehicle options<span aria-hidden="true">→</span></button></div>}
+
+            {step === 2 && <section className="panel" aria-labelledby="customize-heading">
               <div className="section-heading">
                 <span className="step-number" aria-hidden="true">02</span>
                 <div><p className="eyebrow">Your configuration</p><h2 id="customize-heading">Make it yours</h2></div>
@@ -225,11 +250,10 @@ function App() {
                 </label>
                 {trim === 'Sport' && <p className="option-explanation" id="tow-unavailable">This package is unavailable with Sport trim. Choose Touring to add it.</p>}
               </fieldset>
-            </section>
+            </section>}
 
-            <section className="panel summary-panel" aria-labelledby="summary-heading">
+            {step >= 2 && <section className="panel summary-panel" aria-labelledby="summary-heading">
               <div className="section-heading">
-                <span className="step-number" aria-hidden="true">03</span>
                 <div><p className="eyebrow">Your Northstar</p><h2 id="summary-heading">Configuration summary</h2></div>
               </div>
               <dl className="summary-list">
@@ -242,16 +266,19 @@ function App() {
                 <div><span className="eyebrow">Estimated vehicle price</span><p className="price" ref={priceRef} aria-live="polite" aria-atomic="true">{priceText}</p></div>
                 <span className="price-note">Including selected options</span>
               </div>
-            </section>
+            </section>}
+
+            {step === 2 && <div className="step-actions"><button className="secondary-button" type="button" onClick={() => goToStep(1)}>Back to vehicle</button><button className="submit-button" type="button" onClick={() => goToStep(3)}>Continue to enquiry<span aria-hidden="true">→</span></button></div>}
           </div>
 
-          <aside className="lead-column" aria-labelledby="lead-heading">
+          {step === 3 && <aside className="lead-column" aria-labelledby="lead-heading">
             <div className="lead-card">
               <div className="section-heading">
-                <span className="step-number" aria-hidden="true">04</span>
+                <span className="step-number" aria-hidden="true">03</span>
                 <div><p className="eyebrow">Take the next step</p><h2 id="lead-heading">Talk to a specialist</h2></div>
               </div>
               <p className="lead-intro">Leave your details and your chosen dealer will be in touch to help with your Northstar.</p>
+              <button className="back-link" type="button" onClick={() => goToStep(2)}>← Back to vehicle options</button>
 
               <form onSubmit={submitLead} noValidate>
                 {Object.keys(errors).length > 0 && (
@@ -340,7 +367,7 @@ function App() {
                 <p className="submission-status" role="status" aria-live="polite">{status}</p>
               </form>
             </div>
-          </aside>
+          </aside>}
         </div>
       </main>
 
