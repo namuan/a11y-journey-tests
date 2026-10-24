@@ -6,9 +6,21 @@ All application data and service responses are synthetic. The demos do not conne
 
 ## Screenshots
 
-### Automotive configurator
+### Automotive configurator journey
 
-![Automotive configurator demo](screenshots/automotive-configurator.png)
+Each full-page screenshot shows one step of the journey.
+
+#### Step 1: Choose a vehicle
+
+![Automotive configurator vehicle step](screenshots/automotive-configurator.png)
+
+#### Step 2: Configure options
+
+![Automotive configurator options step](screenshots/automotive-options-step.png)
+
+#### Step 3: Send an enquiry
+
+![Automotive configurator enquiry step](screenshots/automotive-enquiry-step.png)
 
 ### Stock portfolio
 
